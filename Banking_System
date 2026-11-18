@@ -1,0 +1,94 @@
+from abc import ABC, abstractmethod
+
+# --- 1. ABSTRACTION & INHERITANCE (Class Induk) ---
+class AkunBank(ABC):
+    def __init__(self, nomor_rekening, nama_pemilik, saldo_awal, pin):
+        self.nomor_rekening = nomor_rekening
+        self.nama_pemilik = nama_pemilik
+        self.__saldo = saldo_awal    # ENCAPSULATION (Privat)
+        self.__pin = pin              # ENCAPSULATION (Privat)
+
+    # Getter untuk saldo (Encapsulation - Read Only)
+    def get_saldo(self, input_pin):
+        if self.__verifikasi_pin(input_pin):
+            return self.__saldo
+        return "PIN Salah!"
+
+    # Setter untuk setor tunai
+    def setor(self, jumlah):
+        if jumlah > 0:
+            self.__saldo += jumlah
+            print(f"Berhasil setor Rp{jumlah:,}. Saldo saat ini: Rp{self.__saldo:,}")
+        else:
+            print("Jumlah setor tidak valid!")
+
+    # Method untuk tarik tunai
+    def tarik(self, jumlah, input_pin):
+        if self.__verifikasi_pin(input_pin):
+            if 0 < jumlah <= self.__saldo:
+                self.__saldo -= jumlah
+                print(f"Berhasil tarik Rp{jumlah:,}. Sisa saldo: Rp{self.__saldo:,}")
+            else:
+                print("Saldo tidak mencukupi atau jumlah tidak valid!")
+        else:
+            print("PIN Salah! Transaksi ditolak.")
+
+    # Method privat untuk verifikasi PIN (Encapsulation)
+    def __verifikasi_pin(self, input_pin):
+        return self.__pin == input_pin
+
+    # POLYMORPHISM: Method abstrak yang akan di-override di subclass
+    @abstractmethod
+    def cek_info(self):
+        pass
+
+
+# --- 2. INHERITANCE (Subclass 1: Akun Tabungan) ---
+class AkunTabungan(AkunBank):
+    def __init__(self, nomor_rekening, nama_pemilik, saldo_awal, pin, suku_bunga):
+        super().__init__(nomor_rekening, nama_pemilik, saldo_awal, pin)
+        self.suku_bunga = suku_bunga  # Atribut tambahan khusus tabungan
+
+    # Overriding method cek_info (Polymorphism)
+    def cek_info(self):
+        print(f"\n--- INFORMASI AKUN TABUNGAN ---")
+        print(f"No Rekening  : {self.nomor_rekening}")
+        print(f"Pemilik      : {self.nama_pemilik}")
+        print(f"Suku Bunga   : {self.suku_bunga}%")
+
+
+# --- 3. INHERITANCE (Subclass 2: Akun Bisnis) ---
+class AkunBisnis(AkunBank):
+    def __init__(self, nomor_rekening, nama_pemilik, saldo_awal, pin, limit_harian):
+        super().__init__(nomor_rekening, nama_pemilik, saldo_awal, pin)
+        self.limit_harian = limit_harian  # Atribut tambahan khusus bisnis
+
+    # Overriding method cek_info (Polymorphism)
+    def cek_info(self):
+        print(f"\n--- INFORMASI AKUN BISNIS ---")
+        print(f"No Rekening  : {self.nomor_rekening}")
+        print(f"Pemilik      : {self.nama_pemilik}")
+        print(f"Limit Harian : Rp{self.limit_harian:,}")
+
+
+# --- 4. SIMULASI / PROGRAM UTAMA ---
+if __name__ == "__main__":
+    print("=== SELAMAT DATANG DI BANK PYTHON ===")
+
+    # Membuat objek dari AkunTabungan dan AkunBisnis
+    akun1 = AkunTabungan("101", "Budi Santoso", 1000000, "1234", 2.5)
+    akun2 = AkunBisnis("202", "PT. Maju Mundur", 15000000, "5678", 50000000)
+
+    # Menjalankan Polymorphism (cek_info)
+    akun1.cek_info()
+    print(f"Saldo Budi: {akun1.get_saldo('1234')}")
+
+    # Transaksi Akun Tabungan
+    print("\n[Transaksi Budi]")
+    akun1.setor(500000)
+    akun1.tarik(200000, "1234")  # PIN benar
+
+    akun2.cek_info()
+    # Percobaan tarik dengan PIN salah
+    print("\n[Uji Keamanan PIN]")
+    akun2.tarik(1000000, "0000")  # PIN salah
